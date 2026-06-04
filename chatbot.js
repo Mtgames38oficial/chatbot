@@ -141,14 +141,23 @@ function registrarLigacao(numero) {
 }
 
 // =====================================
-// CONFIGURAÇÃO DO CLIENTE
+// CONFIGURAÇÃO DO CLIENTE - CORRIGIDA PARA RENDER/LINUX
 // =====================================
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath: "./session" }),
   puppeteer: {
     headless: true,
-    executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
+    args: [
+      "--no-sandbox", 
+      "--disable-setuid-sandbox", 
+      "--disable-dev-shm-usage", 
+      "--disable-gpu",
+      "--disable-accelerated-2d-canvas",
+      "--no-first-run",
+      "--no-zygote",
+      "--single-process",
+      "--disable-default-apps"
+    ],
   },
 });
 
@@ -591,71 +600,26 @@ async function suporteInternet(chat, problema, nomeCliente) {
 // =====================================
 // Mapeamento de valores: o que o cliente paga e quanto recebe em créditos
 const recargasConfig = {
-    "vivo": {
-        "10": {
-            "paga": 13.0,
-            "recebe": 15.0
-        },
-        "20": {
-            "paga": 15.0,
-            "recebe": 20.0
-        },
-        "30": {
-            "paga": 19.0,
-            "recebe": 25.0
-        },
-        "50": {
-            "paga": 20.0,
-            "recebe": 30.0
-        },
-        "100": {
-            "paga": 0.0,
-            "recebe": 0.0
-        }
+    "VIVO": {
+        "10": { paga: 13.00, recebe: 15.00 },
+        "20": { paga: 15.00, recebe: 20.00 },
+        "30": { paga: 19.00, recebe: 25.00 },
+        "50": { paga: 20.00, recebe: 30.00 },
+        "100": { paga: 0.00, recebe: 0.00 }
     },
-    "tim": {
-        "10": {
-            "paga": 0.0,
-            "recebe": 0.0
-        },
-        "20": {
-            "paga": 0.0,
-            "recebe": 0.0
-        },
-        "30": {
-            "paga": 0.0,
-            "recebe": 0.0
-        },
-        "50": {
-            "paga": 0.0,
-            "recebe": 0.0
-        },
-        "100": {
-            "paga": 0.0,
-            "recebe": 0.0
-        }
+    "TIM": {
+        "10": { paga: 0.00, recebe: 0.00 },
+        "20": { paga: 0.00, recebe: 0.00 },
+        "30": { paga: 0.00, recebe: 0.00 },
+        "50": { paga: 0.00, recebe: 0.00 },
+        "100": { paga: 0.00, recebe: 0.00 }
     },
-    "claro": {
-        "10": {
-            "paga": 15.0,
-            "recebe": 10.0
-        },
-        "20": {
-            "paga": 16.0,
-            "recebe": 20.0
-        },
-        "30": {
-            "paga": 20.0,
-            "recebe": 30.0
-        },
-        "50": {
-            "paga": 21.0,
-            "recebe": 50.0
-        },
-        "100": {
-            "paga": 0.0,
-            "recebe": 0.0
-        }
+    "CLARO": {
+        "10": { paga: 15.00, recebe: 10.00 },
+        "20": { paga: 16.00, recebe: 20.00 },
+        "30": { paga: 20.00, recebe: 30.00 },
+        "50": { paga: 21.00, recebe: 50.00 },
+        "100": { paga: 0.00, recebe: 0.00 }
     }
 };
 
@@ -861,7 +825,26 @@ const menuRecargas = `📱 *MENU RECARGAS DE CHIP* 📱
 3️⃣8️⃣ → 📱 CLARO
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 *APÓS ESCOLHER A OPERADORA, SELECIONE O VALOR:*
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+4️⃣1️⃣ → R$ 10,00
+4️⃣2️⃣ → R$ 20,00
+4️⃣3️⃣ → R$ 30,00
+4️⃣4️⃣ → R$ 50,00
+4️⃣5️⃣ → R$ 100,00
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 *SERVIÇOS ADICIONAIS (46-50)*
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4️⃣6️⃣ → Recarga de Jogos (PicPay)
+4️⃣7️⃣ → Recarga Netflix/Spotify
+4️⃣8️⃣ → Histórico de Recargas
+4️⃣9️⃣ → Saldo de Bônus
+5️⃣0️⃣ → Criar Conta no Site
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 0️⃣ → Voltar ao Menu Principal
 1️⃣0️⃣0️⃣ → Falar com Proprietário
 
