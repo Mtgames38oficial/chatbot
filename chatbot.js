@@ -2,18 +2,14 @@
 // ROBÔ ATENDIMENTO MTECH - VERSÃO HUMANIZADA
 // COM LIMITE DE TESTES E PREVENÇÃO DE CONFLITOS
 // MENU SEQUENCIAL 1-100
-// CORRIGIDO: INTERFERÊNCIA ENTRE MENU PRINCIPAL E SUBMENUS
+// QR CODE CORRIGIDO PARA ORACLE CLOUD
 // =====================================
-const qrcode = require("qrcode-terminal");
+
 const { Client, LocalAuth } = require("whatsapp-web.js");
 const https = require("https");
 const fs = require("fs");
 const path = require("path");
-
-// =====================================
-// QR CODE - SALVAR COMO IMAGEM
-// =====================================
-const { toFile } = require('qrcode');
+const { toFile, toDataURL } = require('qrcode');
 
 // =====================================
 // ARQUIVO PARA ARMAZENAR TESTES REALIZADOS
@@ -162,6 +158,254 @@ const client = new Client({
 });
 
 // =====================================
+// QR CODE CORRIGIDO PARA ORACLE CLOUD
+// =====================================
+let qrServer = null;
+
+async function mostrarQRCode(qr) {
+    console.log("\n╔══════════════════════════════════════════════════════════════╗");
+    console.log("║              📲 ESCANEIE O QR CODE ABAIXO                    ║");
+    console.log("╚══════════════════════════════════════════════════════════════╝\n");
+    
+    try {
+        // Método 1: Gerar QR no terminal (simples)
+        const { default: generate } = await import('qrcode');
+        const qrTerminal = await generate(qr, { type: 'terminal', small: true });
+        console.log(qrTerminal);
+        
+        // Método 2: Salvar como imagem PNG
+        await toFile('qrcode.png', qr, { 
+            width: 400,
+            margin: 2,
+            color: {
+                dark: '#000000',
+                light: '#FFFFFF'
+            }
+        });
+        console.log("\n✅ QR Code SALVO como 'qrcode.png'");
+        
+        // Método 3: Criar HTML para visualização no navegador
+        const qrBase64 = await toDataURL(qr);
+        const htmlContent = `<!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>QR Code - MTECH Atendimento</title>
+            <style>
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+                body {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    min-height: 100vh;
+                    padding: 20px;
+                }
+                .container {
+                    background: white;
+                    border-radius: 30px;
+                    padding: 40px;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                    text-align: center;
+                    max-width: 500px;
+                    animation: fadeIn 0.5s ease-in;
+                }
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                h1 {
+                    color: #333;
+                    margin-bottom: 10px;
+                    font-size: 28px;
+                }
+                .subtitle {
+                    color: #666;
+                    margin-bottom: 30px;
+                    font-size: 16px;
+                }
+                .qr-container {
+                    background: white;
+                    padding: 20px;
+                    border-radius: 20px;
+                    display: inline-block;
+                    margin: 20px 0;
+                    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+                }
+                img {
+                    width: 280px;
+                    height: 280px;
+                    display: block;
+                }
+                .status {
+                    background: #e8f5e9;
+                    color: #2e7d32;
+                    padding: 15px;
+                    border-radius: 15px;
+                    margin-top: 20px;
+                    font-weight: bold;
+                }
+                .steps {
+                    text-align: left;
+                    margin-top: 25px;
+                    padding: 20px;
+                    background: #f5f5f5;
+                    border-radius: 15px;
+                }
+                .steps h3 {
+                    color: #333;
+                    margin-bottom: 10px;
+                }
+                .steps ol {
+                    margin-left: 20px;
+                    color: #555;
+                }
+                .steps li {
+                    margin: 10px 0;
+                }
+                .footer {
+                    margin-top: 20px;
+                    color: #999;
+                    font-size: 12px;
+                }
+                .ip-info {
+                    background: #e3f2fd;
+                    padding: 10px;
+                    border-radius: 10px;
+                    margin-top: 15px;
+                    font-family: monospace;
+                    font-size: 14px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>📱 MTECH ATENDIMENTO</h1>
+                <div class="subtitle">WhatsApp Business - Robô Automático</div>
+                
+                <div class="qr-container">
+                    <img src="${qrBase64}" alt="QR Code">
+                </div>
+                
+                <div class="status">
+                    ✅ AGUARDANDO CONEXÃO<br>
+                    Escaneie o QR Code com o WhatsApp
+                </div>
+                
+                <div class="steps">
+                    <h3>📌 COMO CONECTAR:</h3>
+                    <ol>
+                        <li>Abra o WhatsApp no seu celular</li>
+                        <li>Toque nos 3 pontos (⋮) > WhatsApp Web</li>
+                        <li>Escaneie o QR Code acima</li>
+                        <li>Aguardar confirmação de conexão</li>
+                    </ol>
+                </div>
+                
+                <div class="ip-info" id="ipInfo">
+                    🔄 Carregando informações de rede...
+                </div>
+                
+                <div class="footer">
+                    🔒 Conexão segura e criptografada<br>
+                    ⏱️ QR Code expira em 60 segundos
+                </div>
+            </div>
+            
+            <script>
+                // Tenta obter o IP da máquina
+                fetch('https://api.ipify.org?format=json')
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('ipInfo').innerHTML = '🌐 IP Público: ' + data.ip + '<br>📱 Acesse este QR Code por qualquer dispositivo na mesma rede';
+                    })
+                    .catch(() => {
+                        document.getElementById('ipInfo').innerHTML = '📱 Escaneie o QR Code diretamente pelo WhatsApp';
+                    });
+            </script>
+        </body>
+        </html>`;
+        
+        fs.writeFileSync('qrcode.html', htmlContent);
+        console.log("✅ QR Code HTML salvo como 'qrcode.html'");
+        
+        // Método 4: Iniciar servidor HTTP para servir o QR
+        if (!qrServer) {
+            const http = require('http');
+            const port = 8080;
+            
+            qrServer = http.createServer((req, res) => {
+                if (req.url === '/' || req.url === '/qrcode') {
+                    res.writeHead(200, { 'Content-Type': 'text/html' });
+                    res.end(htmlContent);
+                } else if (req.url === '/qrcode.png') {
+                    res.writeHead(200, { 'Content-Type': 'image/png' });
+                    res.end(fs.readFileSync('qrcode.png'));
+                } else if (req.url === '/status') {
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'online', timestamp: Date.now() }));
+                } else {
+                    res.writeHead(404);
+                    res.end();
+                }
+            });
+            
+            qrServer.listen(port, '0.0.0.0', () => {
+                console.log("\n╔══════════════════════════════════════════════════════════════╗");
+                console.log("║              🌐 SERVIDOR QR CODE INICIADO!                    ║");
+                console.log("╚══════════════════════════════════════════════════════════════╝");
+                console.log(`\n📱 ACESSE NO NAVEGADOR:`);
+                console.log(`   → http://localhost:${port}`);
+                console.log(`   → http://127.0.0.1:${port}`);
+                
+                // Tenta pegar IP da máquina
+                const { networkInterfaces } = require('os');
+                const nets = networkInterfaces();
+                for (const name of Object.keys(nets)) {
+                    for (const net of nets[name]) {
+                        if (net.family === 'IPv4' && !net.internal) {
+                            console.log(`   → http://${net.address}:${port}`);
+                        }
+                    }
+                }
+                console.log("\n💡 DICA: Se estiver no Cloud, use o IP público ou configure túnel SSH");
+                console.log("════════════════════════════════════════════════════════════════\n");
+            });
+        }
+        
+        // Salvar QR como texto (fallback)
+        fs.writeFileSync('qr_code.txt', qr);
+        console.log("✅ QR Code salvo como 'qr_code.txt' (texto puro)");
+        
+    } catch (err) {
+        console.error("❌ Erro ao gerar QR Code:", err.message);
+        console.log("\n📝 QR CODE EM TEXTO (copie e cole para decodificar):");
+        console.log(qr);
+        console.log("\n🔗 Ou use: https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + encodeURIComponent(qr));
+    }
+    
+    console.log("\n╔══════════════════════════════════════════════════════════════╗");
+    console.log("║  💡 FORMAS DE ESCANEAR O QR CODE:                            ║");
+    console.log("║  1️⃣ Abra o arquivo 'qrcode.html' no navegador               ║");
+    console.log("║  2️⃣ Acesse http://localhost:8080 no navegador               ║");
+    console.log("║  3️⃣ Baixe a imagem 'qrcode.png' e escaneie                  ║");
+    console.log("║  4️⃣ Use um decodificador online com o 'qr_code.txt'        ║");
+    console.log("╚══════════════════════════════════════════════════════════════╝\n");
+}
+
+// =====================================
 // LINKS DA API (IPTV)
 // =====================================
 const linksAPI = {
@@ -191,31 +435,34 @@ let aguardandoRecarga = new Map();
 let ultimaInteracao = new Map();
 
 // =====================================
-// QR CODE
+// EVENTOS DO CLIENTE
 // =====================================
 client.on("qr", async (qr) => {
-  console.log("📲 Escaneie o QR Code abaixo:");
-  qrcode.generate(qr, { small: true });
-  
-  try {
-    await toFile('qrcode.png', qr);
-    console.log("✅ QR Code salvo como qrcode.png");
-    fs.writeFileSync('qr_code.txt', qr);
-    console.log("✅ QR Code salvo como texto");
-  } catch (err) {
-    console.log("❌ Erro ao salvar QR Code:", err);
-  }
+    console.log("\n🔄 GERANDO QR CODE PARA CONEXÃO...\n");
+    await mostrarQRCode(qr);
 });
 
 client.on("ready", () => {
-  console.log("✅ ATENDIMENTO MTECH - Robô conectado!");
+  console.log("\n╔══════════════════════════════════════════════════════════════╗");
+  console.log("║         ✅ ATENDIMENTO MTECH - Robô conectado!                ║");
+  console.log("╚══════════════════════════════════════════════════════════════╝");
   console.log("🤖 Modo humanizado ativado!");
   console.log("📋 Menu sequencial 1-100 ativado!");
   console.log("🔄 Sistema de estado de conversa ativado!");
+  console.log("🚫 Bloqueio de ligações ativado!");
+  console.log("📱 QR Code server rodando em http://localhost:8080\n");
 });
 
 client.on("disconnected", (reason) => {
   console.log("⚠️ Desconectado:", reason);
+  if (reason === "NAVIGATION") {
+    console.log("🔄 QR Code expirado, novo QR será gerado...");
+  }
+});
+
+client.on("auth_failure", (msg) => {
+    console.error("❌ Falha na autenticação:", msg);
+    console.log("🔄 Reinicie o robô para gerar novo QR Code");
 });
 
 client.initialize();
@@ -1508,22 +1755,12 @@ ${linkInternet}
   }
 });
 
-console.log("🚀 ATENDIMENTO MTECH - Robô iniciado!");
-console.log("✅ CORREÇÃO: Interferência entre menus resolvida!");
-console.log("📱 Sistema de estado de conversa ativado!");
-console.log("✅ Menu principal carregado com sucesso!");
-console.log("✅ Funcionalidades por estado:");
-console.log("   - principal: opções 1,2,3,4,5,10,20,30,40,50,100");
-console.log("   - iptv: opções 1-20");
-console.log("   - internet: opções 21-35");
-console.log("   - recargas: opções 36-50 (VIVO, TIM, CLARO)");
-console.log("   - consultas: opções 51-60");
-console.log("   - ajuda: opções 61-75");
-console.log("   - configuracoes: opções 76-90");
-console.log("   - termos: opções 91-99");
-console.log("🚫 BLOQUEIO de ligações ativado!");
-console.log("📱 QR Code salvo como qrcode.png!");
-console.log("🚫 NÚMEROS IGNORADOS ATIVADO!");
-console.log("    - +55 38 9908-5898");
-console.log("    - +55 14 98232-5661");
-console.log("📱 RECARGAS: VIVO, TIM, CLARO disponíveis!");
+console.log("╔══════════════════════════════════════════════════════════════╗");
+console.log("║         🚀 ATENDIMENTO MTECH - Robô iniciado!                 ║");
+console.log("╠══════════════════════════════════════════════════════════════╣");
+console.log("║ ✅ CORREÇÃO: Interferência entre menus resolvida!            ║");
+console.log("║ ✅ QR CODE CORRIGIDO para Oracle Cloud!                       ║");
+console.log("║ 📱 Sistema de estado de conversa ativado!                    ║");
+console.log("║ 🚫 BLOQUEIO de ligações ativado!                             ║");
+console.log("║ 📱 QR Code servidor em http://localhost:8080                 ║");
+console.log("╚══════════════════════════════════════════════════════════════╝");
